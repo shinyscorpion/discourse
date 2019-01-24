@@ -1,5 +1,10 @@
 # Discourse
 
+[![Hex.pm](https://img.shields.io/hexpm/v/discourse.svg "Hex")](https://hex.pm/packages/discourse)
+[![Build Status](https://travis-ci.org/shinyscorpion/discourse.svg?branch=master)](https://travis-ci.org/shinyscorpion/discourse)
+[![Coverage Status](https://coveralls.io/repos/github/shinyscorpion/discourse/badge.svg?branch=master)](https://coveralls.io/github/shinyscorpion/discourse?branch=master)
+[![Hex.pm](https://img.shields.io/hexpm/l/discourse.svg "License")](LICENSE)
+
 Simple Discourse library including SSO support.
 
 ## Installation
