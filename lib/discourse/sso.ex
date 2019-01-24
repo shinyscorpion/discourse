@@ -204,8 +204,8 @@ defmodule Discourse.SSO do
   @spec url(Keyword.t()) :: String.t()
   def url(opts), do: config(:url, opts, "Discourse SSO: Need to set `url` in config or opts.")
 
-  @spec config(atom, String.t()) :: String.t() | no_return
-  defp config(field, message) do
+  @spec config(atom, Keyword.t(), String.t()) :: String.t() | no_return
+  defp config(field, opts, message) do
     Keyword.get_lazy(
       opts,
       field,
