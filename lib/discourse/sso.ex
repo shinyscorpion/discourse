@@ -32,7 +32,7 @@ defmodule Discourse.SSO do
     moderator
     require_activation
     suppress_welcome_message
-  )
+  )a
 
   @fields @string_fields ++ @boolean_fields
 
