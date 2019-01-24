@@ -7,18 +7,15 @@ defmodule Discourse.SSO do
   require Logger
 
   @string_fields ~w(
-    add_groups
     avatar_url
     bio
     card_background_url
     email
     external_id
-    groups
     locale
     name
     nonce
     profile_background_url
-    remove_groups
     return_sso_url
     title
     username
@@ -32,9 +29,15 @@ defmodule Discourse.SSO do
     moderator
     require_activation
     suppress_welcome_message
-  )
+  )a
 
-  @fields @string_fields ++ @boolean_fields
+  @list_fields ~w(
+    add_groups
+    groups
+    remove_groups
+  )a
+
+  @fields @string_fields ++ @boolean_fields ++ @list_fields
 
   @doc ~S"""
   Verify the passed sso nonce and signature.
@@ -59,7 +62,7 @@ defmodule Discourse.SSO do
          %{"nonce" => nonce} <- URI.decode_query(decoded) do
       {:ok, nonce}
     else
-      error = {:error, _} -> error
+      :error -> {:error, :invalid_encoding}
       false -> {:error, :invalid_signature}
       _ -> {:error, :invalid_payload}
     end
@@ -165,26 +168,18 @@ defmodule Discourse.SSO do
   ### Helpers ###
 
   @spec encode_field({atom, any}) :: String.t() | nil
-  defp encode_field({:groups, groups}),
-    do: "groups=#{URI.encode_www_form(Enum.join(groups, ","))}"
-
-  defp encode_field({:add_groups, groups}),
-    do: "add_groups=#{URI.encode_www_form(Enum.join(groups, ","))}"
-
-  defp encode_field({:remove_groups, groups}),
-    do: "remove_groups=#{URI.encode_www_form(Enum.join(groups, ","))}"
+  defp encode_field({field, list}) when field in @list_fields and list != [],
+    do: "#{field}=#{URI.encode_www_form(Enum.join(list, ","))}"
 
   defp encode_field({field, value}) when field in @string_fields,
     do: "#{field}=#{URI.encode_www_form(to_string(value))}"
 
-  defp encode_field({field, value}) when field in @boolean_fields do
+  defp encode_field({field, value}) when field in @boolean_fields and is_boolean(value) do
     if value === true, do: "#{field}=true"
   end
 
-  defp encode_field({field, _}) do
-    Logger.warn(fn -> "Discourse SSO: Unknown option: #{field}" end)
-
-    nil
+  defp encode_field({field, _}) when field in @fields do
+    Logger.warn(fn -> "Discourse SSO: Invalid value for: #{field}" end)
   end
 
   @spec sig(binary, Keyword.t()) :: String.t()
@@ -204,8 +199,8 @@ defmodule Discourse.SSO do
   @spec url(Keyword.t()) :: String.t()
   def url(opts), do: config(:url, opts, "Discourse SSO: Need to set `url` in config or opts.")
 
-  @spec config(atom, String.t()) :: String.t() | no_return
-  defp config(field, message) do
+  @spec config(atom, Keyword.t(), String.t()) :: String.t() | no_return
+  defp config(field, opts, message) do
     Keyword.get_lazy(
       opts,
       field,
